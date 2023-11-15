@@ -14,18 +14,26 @@ public class Rechner {
      * @param targetWochentag   Der Wochentag, nach dem gefiltert werden soll (z.B. "Mo" für Montag).
      */
     public void filterByWochentag(List<Sterberate> sterberateListe, String targetWochentag) {
-        Map<String, Integer> yearToDeathCount = sterberateListe.stream()
-                .filter(sterberate -> sterberate.getWochentag().equals(targetWochentag))
-                .collect(Collectors.groupingBy(Sterberate::getJahr,
-                        Collectors.summingInt(Sterberate::getAnz_total)));
+        boolean wochentagExistiert = sterberateListe.stream()
+                .anyMatch(sterberate -> sterberate.getWochentag().equals(targetWochentag));
+        if(wochentagExistiert){
+            Map<String, Integer> yearToDeathCount = sterberateListe.stream()
+                    .filter(sterberate -> sterberate.getWochentag().equals(targetWochentag))
+                    .collect(Collectors.groupingBy(Sterberate::getJahr,
+                            Collectors.summingInt(Sterberate::getAnz_total)));
 
-        yearToDeathCount.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .forEach(entry -> {
-                    String year = entry.getKey();
-                    int deathCount = entry.getValue();
-                    System.out.println(targetWochentag + " (" + year + ") : " + deathCount);
-                });
+            yearToDeathCount.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(entry -> {
+                        String year = entry.getKey();
+                        int deathCount = entry.getValue();
+                        System.out.println(targetWochentag + " (" + year + ") : " + deathCount);
+                    });
+        }
+        else{
+            System.out.println("Dieser Wochentag existiert nicht");
+        }
+
     }
 
     /**
@@ -35,27 +43,35 @@ public class Rechner {
      * @param year              Das Jahr, für das die höchste Todesfallwoche gefunden werden soll.
      */
     public void findMaxWeekValueForYear(List<Sterberate> sterberateListe, int year) {
-        Map<Integer, Integer> weekToDeathCount = sterberateListe.stream()
-                .filter(sterberate -> Integer.parseInt(sterberate.getJahr()) == year)
-                .collect(Collectors.groupingBy(Sterberate::getWoche_in_jahr,
-                        Collectors.summingInt(Sterberate::getAnz_total)));
+        boolean jahrExistiert = sterberateListe.stream()
+                .anyMatch(sterberate -> sterberate.getJahr().equals(Integer.toString(year)));
+        if(jahrExistiert){
+            Map<Integer, Integer> weekToDeathCount = sterberateListe.stream()
+                    .filter(sterberate -> Integer.parseInt(sterberate.getJahr()) == year)
+                    .collect(Collectors.groupingBy(Sterberate::getWoche_in_jahr,
+                            Collectors.summingInt(Sterberate::getAnz_total)));
 
-        weekToDeathCount.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .forEach(entry -> {
-                    int week = entry.getKey();
-                    int deathCount = entry.getValue();
-                    System.out.println("Woche " + week + " = " + deathCount + " (Anzahl Tode)");
-                });
+            weekToDeathCount.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(entry -> {
+                        int week = entry.getKey();
+                        int deathCount = entry.getValue();
+                        System.out.println("Woche " + week + " = " + deathCount + " (Anzahl Tode)");
+                    });
 
-        int maxDeathCount = weekToDeathCount.values().stream().mapToInt(Integer::intValue).max().orElse(0);
-        int maxWeek = weekToDeathCount.entrySet().stream()
-                .filter(entry -> entry.getValue() == maxDeathCount)
-                .map(Map.Entry::getKey)
-                .findFirst()
-                .orElse(-1);
+            int maxDeathCount = weekToDeathCount.values().stream().mapToInt(Integer::intValue).max().orElse(0);
+            int maxWeek = weekToDeathCount.entrySet().stream()
+                    .filter(entry -> entry.getValue() == maxDeathCount)
+                    .map(Map.Entry::getKey)
+                    .findFirst()
+                    .orElse(-1);
 
-        System.out.println("Die Woche mit dem Höchsten Wert war: Woche " + maxWeek + " = " + maxDeathCount);
+            System.out.println("Die Woche mit dem Höchsten Wert war: Woche " + maxWeek + " = " + maxDeathCount);
+        }
+        else{
+            System.out.println("Jahr ist ungültig");
+        }
+
     }
 
     /**
@@ -65,11 +81,19 @@ public class Rechner {
      * @param targetYear        Das Jahr, für das die Gesamtzahl der Todesfälle ermittelt werden soll.
      */
     public static void calculateTotalDeathsForYear(List<Sterberate> sterberateListe, int targetYear) {
-        int totalDeaths = sterberateListe.stream()
-                .filter(sterberate -> Integer.parseInt(sterberate.getJahr()) == 2022 )
-                .mapToInt(Sterberate::getAnz_total)
-                .sum();
+        boolean jahrExistiert = sterberateListe.stream()
+                .anyMatch(sterberate -> sterberate.getJahr().equals(Integer.toString(targetYear)));
+        if (jahrExistiert){
+            int totalDeaths = sterberateListe.stream()
+                    .filter(sterberate -> Integer.parseInt(sterberate.getJahr()) == targetYear )
+                    .mapToInt(Sterberate::getAnz_total)
+                    .sum();
+            System.out.println("Gesamtzahl der Todesfälle im Jahr " + targetYear + ": " + totalDeaths);
+        }
+        else {
+            System.out.println("Ungültiges Jahr angegeben");
+        }
 
-        System.out.println("Gesamtzahl der Todesfälle im Jahr " + targetYear + ": " + totalDeaths);
+
     }
 }
